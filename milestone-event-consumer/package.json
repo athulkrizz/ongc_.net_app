@@ -1,0 +1,47 @@
+{
+  "name": "milestone-event-consumer",
+  "version": "1.0.0",
+  "description": "Node.js Kafka consumer for milestone events from ONGC.MilestoneAPI",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node dist/index.js",
+    "dev": "ts-node-esm src/index.ts",
+    "dev:watch": "nodemon --exec ts-node-esm src/index.ts",
+    "migrate": "ts-node-esm src/models/migrate.ts",
+    "reset": "ts-node-esm scripts/reset-db.ts",
+    "test": "ts-node-esm scripts/test-consumer.ts",
+    "docker:build": "docker build -t milestone-event-consumer .",
+    "docker:run": "docker run -p 3000:3000 --env-file .env milestone-event-consumer",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "kafka",
+    "consumer",
+    "postgresql",
+    "milestone",
+    "events",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "joi": "^17.13.3",
+    "kafkajs": "^2.2.4",
+    "pg": "^8.12.0",
+    "winston": "^3.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@types/pg": "^8.11.6",
+    "nodemon": "^3.1.4",
+    "rimraf": "^5.0.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

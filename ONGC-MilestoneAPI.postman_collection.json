@@ -1,0 +1,93 @@
+{
+  "info": {
+    "name": "ONGC Milestone API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:5000/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@ongc.com\",\n  \"password\": \"Test123!\",\n  \"role\": \"Admin\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:5000/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@ongc.com\",\n  \"password\": \"Test123!\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Companies",
+      "item": [
+        {
+          "name": "Create Company",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": "http://localhost:5000/api/companies",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ONGC Ltd\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Companies",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": "http://localhost:5000/api/companies"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Milestones",
+      "item": [
+        {
+          "name": "Create Milestone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": "http://localhost:5000/api/milestones",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designId\": 1,\n  \"milestoneType\": \"DesignInitiated\",\n  \"timestamp\": \"2024-01-15T10:00:00Z\",\n  \"workCentre\": \"Mumbai Office\",\n  \"metadata\": \"{\\\"notes\\\":\\\"Test\\\"}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Milestones by Design",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": "http://localhost:5000/api/milestones/designs/1"
+          }
+        }
+      ]
+    }
+  ]
+}
