@@ -579,28 +579,27 @@ ongc_.net_app/
 │   │   └── MilestoneController.cs  # Milestone management
 │   ├── Services/
 │   │   ├── KafkaProducerService.cs # Kafka event publishing
-│   │   ├── AuthService.cs          # JWT generation
-│   │   └── MilestoneService.cs     # Business logic
+│   │   └── Interfaces/
 │   ├── Data/
 │   │   └── ApplicationDbContext.cs # EF Core context
 │   ├── Entities/
 │   │   ├── Milestone.cs            # Domain models
 │   │   └── User.cs
 │   ├── Models/
-│   │   ├── MilestoneCreateDto.cs   # DTOs
-│   │   └── LoginRequest.cs
+│   │   └── DTOs                    # Data Transfer Objects
 │   ├── Repositories/
-│   │   └── MilestoneRepository.cs  # Data access
+│   │   ├── MilestoneRepository.cs  # Data access
+│   │   └── Interfaces/
 │   ├── Middleware/
 │   │   └── ExceptionMiddleware.cs  # Global error handling
 │   ├── Helpers/
 │   │   └── JwtHelper.cs            # JWT utilities
-│   ├── Migrations/                 # EF migrations
-│   ├── appsettings.json           # Configuration
-│   ├── Program.cs                 # Application entry
+│   ├── Migrations/                 # EF Core migrations
+│   ├── appsettings.json            # Configuration
+│   ├── Program.cs                  # Application entry
 │   └── ONGC.MilestoneAPI.csproj
 │
-├── milestone-event-consumer/        # Node.js Consumer
+├── milestone-event-consumer/        # Node.js/TypeScript Consumer
 │   ├── src/
 │   │   ├── services/
 │   │   │   ├── kafkaConsumer.ts    # Kafka consumer setup
@@ -610,9 +609,13 @@ ongc_.net_app/
 │   │   │   ├── schema.ts           # Joi validation schemas
 │   │   │   └── migrate.ts          # Database migrations
 │   │   ├── config/
-│   │   │   └── database.ts         # DB configuration
+│   │   │   ├── database.ts         # DB configuration
+│   │   │   ├── kafka.ts            # Kafka config
+│   │   │   └── logger.ts           # Logger config
 │   │   ├── utils/
-│   │   │   └── logger.ts           # Winston logger
+│   │   │   └── retry.ts            # Retry logic
+│   │   ├── validators/
+│   │   │   └── eventValidator.ts   # Event validation
 │   │   └── index.ts                # Application entry
 │   ├── scripts/
 │   │   ├── reset-db.ts             # Database reset utility
@@ -620,27 +623,36 @@ ongc_.net_app/
 │   ├── .env.example                # Environment template
 │   ├── package.json
 │   ├── tsconfig.json
-│   └── Dockerfile
+│   ├── Dockerfile
+│   └── README.md
 │
-├── Documentation/                   # Comprehensive guides
-│   ├── EVENT_DRIVEN_SETUP_GUIDE.md
+├── docs/                            # Documentation
+│   ├── BEGINNERS_ARCHITECTURE_GUIDE.md
+│   ├── COMPLETE_BEGINNERS_TEST_GUIDE.md
 │   ├── COMPLETE_DATA_FLOW_EXPLAINED.md
+│   ├── COMPLETE_DATA_FLOW_FOR_BEGINNERS.md
 │   ├── COMPLETE_TESTING_GUIDE_STEP_BY_STEP.md
+│   ├── EVENT_DRIVEN_SETUP_GUIDE.md
+│   ├── QUICK_REFERENCE_CARD.md
+│   ├── QUICK_SETUP_GUIDE.md
 │   ├── QUICK_TEST_CHECKLIST.md
-│   ├── VISUAL_ARCHITECTURE_DIAGRAM.md
-│   └── BEGINNERS_ARCHITECTURE_GUIDE.md
+│   ├── SETUP_COMPLETE.md
+│   ├── STEP_BY_STEP_TESTING_WITH_KAFKA.md
+│   ├── SUPER_QUICK_TEST.md
+│   └── VISUAL_ARCHITECTURE_DIAGRAM.md
 │
-├── Postman Collections/
-│   └── ONGC-MilestoneAPI.postman_collection.json
-│
-├── Scripts/                         # Utility scripts
+├── scripts/                         # Utility scripts
 │   ├── quick-test.ps1
 │   ├── test-api.ps1
 │   └── verify-kafka-events.ps1
 │
-├── .gitignore
-├── README.md                        # This file
-└── LICENSE
+├── .gitignore                       # Git ignore rules
+├── CHANGELOG.md                     # Version history
+├── CONTRIBUTING.md                  # Contribution guidelines
+├── LICENSE                          # MIT License
+├── ONGC_Requirements.txt            # Requirements document
+├── ONGC.MilestoneAPI.postman_collection.json  # Postman collection
+└── README.md                        # This file
 ```
 
 ---
@@ -652,13 +664,13 @@ ongc_.net_app/
 **Windows PowerShell:**
 ```powershell
 # Quick API test
-.\test-api.ps1
+.\scripts\test-api.ps1
 
 # Verify Kafka events
-.\verify-kafka-events.ps1
+.\scripts\verify-kafka-events.ps1
 
 # Complete test suite
-.\quick-test.ps1
+.\scripts\quick-test.ps1
 ```
 
 ### Unit Testing
@@ -954,17 +966,21 @@ const consumer = kafka.consumer({
 
 ### Getting Started
 - [README.md](README.md) - This file (Overview & Setup)
-- [EVENT_DRIVEN_SETUP_GUIDE.md](EVENT_DRIVEN_SETUP_GUIDE.md) - Detailed setup instructions
-- [BEGINNERS_ARCHITECTURE_GUIDE.md](BEGINNERS_ARCHITECTURE_GUIDE.md) - Architecture explained for beginners
+- [docs/EVENT_DRIVEN_SETUP_GUIDE.md](docs/EVENT_DRIVEN_SETUP_GUIDE.md) - Detailed setup instructions
+- [docs/BEGINNERS_ARCHITECTURE_GUIDE.md](docs/BEGINNERS_ARCHITECTURE_GUIDE.md) - Architecture explained for beginners
+- [docs/QUICK_SETUP_GUIDE.md](docs/QUICK_SETUP_GUIDE.md) - Quick command reference
 
 ### Testing & Development
-- [COMPLETE_TESTING_GUIDE_STEP_BY_STEP.md](COMPLETE_TESTING_GUIDE_STEP_BY_STEP.md) - Comprehensive testing guide
-- [QUICK_TEST_CHECKLIST.md](QUICK_TEST_CHECKLIST.md) - Quick test reference
-- [SUPER_QUICK_TEST.md](SUPER_QUICK_TEST.md) - Fastest way to test
+- [docs/COMPLETE_TESTING_GUIDE_STEP_BY_STEP.md](docs/COMPLETE_TESTING_GUIDE_STEP_BY_STEP.md) - Comprehensive testing guide
+- [docs/STEP_BY_STEP_TESTING_WITH_KAFKA.md](docs/STEP_BY_STEP_TESTING_WITH_KAFKA.md) - Kafka monitoring & testing
+- [docs/QUICK_TEST_CHECKLIST.md](docs/QUICK_TEST_CHECKLIST.md) - Quick test reference
+- [docs/SUPER_QUICK_TEST.md](docs/SUPER_QUICK_TEST.md) - Fastest way to test
 
 ### Architecture & Design
-- [COMPLETE_DATA_FLOW_EXPLAINED.md](COMPLETE_DATA_FLOW_EXPLAINED.md) - Data flow documentation
-- [VISUAL_ARCHITECTURE_DIAGRAM.md](VISUAL_ARCHITECTURE_DIAGRAM.md) - Visual architecture overview
+- [docs/COMPLETE_DATA_FLOW_FOR_BEGINNERS.md](docs/COMPLETE_DATA_FLOW_FOR_BEGINNERS.md) - Data flow explained (Beginner-friendly)
+- [docs/COMPLETE_DATA_FLOW_EXPLAINED.md](docs/COMPLETE_DATA_FLOW_EXPLAINED.md) - Advanced data flow documentation
+- [docs/VISUAL_ARCHITECTURE_DIAGRAM.md](docs/VISUAL_ARCHITECTURE_DIAGRAM.md) - Visual architecture overview
+- [docs/QUICK_REFERENCE_CARD.md](docs/QUICK_REFERENCE_CARD.md) - Quick reference for all commands
 
 ---
 
