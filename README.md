@@ -1,4 +1,161 @@
-# 🎯 ONGC Milestone Event-Driven System
+# ONGC Milestone Event-Driven System
+
+Event-driven architecture for ONGC milestone tracking with .NET 8 API, Apache Kafka, and Node.js consumer.
+
+## Architecture
+
+```
+Client → .NET API → Kafka → Node.js Consumer → PostgreSQL
+```
+
+## Prerequisites
+
+- .NET 8 SDK
+- Node.js 18+
+- PostgreSQL
+- Apache Kafka + Zookeeper
+
+## Setup
+
+### 1. PostgreSQL Database
+
+```sql
+CREATE DATABASE ongc_insight;
+CREATE USER ongc_user WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE ongc_insight TO ongc_user;
+```
+
+### 2. Start Kafka & Zookeeper
+
+```bash
+# Start Zookeeper
+cd C:\kafka
+.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+
+# Start Kafka (new terminal)
+.\bin\windows\kafka-server-start.bat .\config\server.properties
+
+# Create Topic (new terminal)
+.\bin\windows\kafka-topics.bat --create --topic milestone-events --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+```
+
+### 3. Configure .NET API
+
+Edit `ONGC.MilestoneAPI/appsettings.json`:
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database=ongc_insight;Username=ongc_user;Password=your_password"
+  },
+  "Jwt": {
+    "Secret": "YourSuperSecretKeyForJWTTokenGenerationMinimum32Characters!",
+    "Issuer": "ONGC.MilestoneAPI",
+    "Audience": "ONGC.MilestoneAPI.Client",
+    "ExpiryHours": "24"
+  },
+  "Kafka": {
+    "BootstrapServers": "localhost:9092"
+  }
+}
+```
+
+Run migrations and start API:
+
+```bash
+cd ONGC.MilestoneAPI
+dotnet ef database update
+dotnet run
+```
+
+API will be available at: `http://localhost:5275`
+
+### 4. Configure Node.js Consumer
+
+Create `milestone-event-consumer/.env`:
+
+```env
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_NAME=ongc_insight
+DATABASE_USER=ongc_user
+DATABASE_PASSWORD=your_password
+
+KAFKA_BROKERS=localhost:9092
+KAFKA_GROUP_ID=milestone-consumer-group
+KAFKA_TOPIC=milestone-events
+```
+
+Install dependencies and start:
+
+```bash
+cd milestone-event-consumer
+npm install
+npm run migrate
+npm start
+```
+
+## Testing
+
+### Login
+
+```bash
+POST http://localhost:5275/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "Test@1234"
+}
+```
+
+### Create Milestone
+
+```bash
+POST http://localhost:5275/api/Milestone
+Authorization: Bearer <your_token>
+Content-Type: application/json
+
+{
+  "asset": "Mumbai High",
+  "well": "MH-001",
+  "wellbore": "MH-001-A1",
+  "currentMilestone": "Drilling Started",
+  "approvalLevel": "Level-1",
+  "status": "In-progress",
+  "days": 15,
+  "percentCompleted": 25.5
+}
+```
+
+### Verify in Database
+
+```sql
+SELECT * FROM milestones ORDER BY processed_at DESC LIMIT 10;
+```
+
+## Structure
+
+```
+├── ONGC.MilestoneAPI/          # .NET 8 Web API
+│   ├── Controllers/            # API endpoints
+│   ├── Services/               # Kafka producer
+│   ├── Data/                   # EF Core context
+│   ├── Entities/               # Database models
+│   ├── Repositories/           # Data access
+│   └── Migrations/             # Database migrations
+│
+└── milestone-event-consumer/   # Node.js Consumer
+    ├── src/
+    │   ├── services/           # Kafka consumer & processor
+    │   ├── models/             # Database schemas
+    │   └── config/             # Configuration
+    └── scripts/                # Utility scripts
+```
+
+## License
+
+MIT
 
 [![.NET](https://img.shields.io/badge/.NET-8.0-blue)](https://dotnet.microsoft.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green)](https://nodejs.org/)
