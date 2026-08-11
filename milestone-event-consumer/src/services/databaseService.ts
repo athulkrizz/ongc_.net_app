@@ -1,5 +1,6 @@
 import database from '../config/database.js';
 import logger from '../config/logger.js';
+import { MilestoneEvent } from '../validators/eventValidator.js';
 
 /**
  * Database service for milestone events and error tracking
@@ -7,48 +8,53 @@ import logger from '../config/logger.js';
 class DatabaseService {
   /**
    * Insert a milestone event into the database
-   * @param {Object} event - The milestone event data
-   * @returns {Promise<Object>} Inserted record
    */
-  async insertMilestoneEvent(event) {
+  async insertMilestoneEvent(event: MilestoneEvent): Promise<any> {
     const query = `
-      INSERT INTO milestone_events (
+      INSERT INTO milestones (
         event_id,
-        event_type,
-        design_id,
-        milestone_type,
-        work_centre,
-        user_id,
-        milestone_timestamp,
-        recorded_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        asset,
+        well,
+        wellbore,
+        user_email,
+        current_milestone,
+        approval_level,
+        status,
+        days,
+        percent_completed,
+        event_timestamp
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `;
 
     const values = [
-      event.eventId,
-      event.eventType,
-      event.data.designId,
-      event.data.milestoneType,
-      event.data.workCentre,
-      event.data.userId,
-      new Date(event.timestamp),
-      new Date(event.data.recordedAt)
+      event.EventId,
+      event.Data.Asset,
+      event.Data.Well,
+      event.Data.Wellbore,
+      event.Data.User,
+      event.Data.CurrentMilestone,
+      event.Data.ApprovalLevel,
+      event.Data.Status,
+      event.Data.Days,
+      event.Data.PercentCompleted,
+      new Date(event.Timestamp)
     ];
 
     try {
       const result = await database.query(query, values);
       logger.info('Milestone event inserted successfully', {
-        eventId: event.eventId,
-        designId: event.data.designId,
-        milestoneType: event.data.milestoneType,
+        eventId: event.EventId,
+        asset: event.Data.Asset,
+        well: event.Data.Well,
+        milestone: event.Data.CurrentMilestone,
         dbId: result.rows[0].id
       });
       return result.rows[0];
     } catch (error) {
       logger.error('Failed to insert milestone event', {
         error: error.message,
-        eventId: event.eventId,
+        eventId: event.EventId,
         code: error.code
       });
       throw error;
@@ -61,16 +67,16 @@ class DatabaseService {
    * @returns {Promise<boolean>} True if event exists
    */
   async eventExists(eventId) {
-    const query = 'SELECT COUNT(*) as count FROM milestone_events WHERE event_id = $1';
-    
+    const query = 'SELECT COUNT(*) as count FROM milestones WHERE event_id = $1';
+
     try {
       const result = await database.query(query, [eventId]);
       const exists = parseInt(result.rows[0].count, 10) > 0;
-      
+
       if (exists) {
         logger.debug('Duplicate event detected', { eventId });
       }
-      
+
       return exists;
     } catch (error) {
       logger.error('Failed to check event existence', {

@@ -38,12 +38,13 @@ class EventProcessor {
       }
 
       event = JSON.parse(messageValue);
-      eventId = event?.eventId || null;
+      eventId = event?.EventId || null;
 
       logger.info('Received milestone event', {
         eventId,
-        designId: event?.data?.designId,
-        milestoneType: event?.data?.milestoneType,
+        asset: event?.Data?.Asset,
+        well: event?.Data?.Well,
+        milestone: event?.Data?.CurrentMilestone,
         partition: payload.partition,
         offset: payload.message.offset
       });
@@ -87,7 +88,8 @@ class EventProcessor {
       if (exists) {
         logger.info('Duplicate event detected - skipping', {
           eventId,
-          designId: event.data.designId
+          asset: event.Data.Asset,
+          well: event.Data.Well
         });
         this.duplicateCount++;
         return true; // Already processed, commit offset
@@ -105,8 +107,9 @@ class EventProcessor {
 
       logger.info('Event processed successfully', {
         eventId,
-        designId: event.data.designId,
-        milestoneType: event.data.milestoneType
+        asset: event.Data.Asset,
+        well: event.Data.Well,
+        milestone: event.Data.CurrentMilestone
       });
 
       this.processedCount++;

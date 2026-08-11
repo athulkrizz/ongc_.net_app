@@ -1,136 +1,114 @@
 import Joi from 'joi';
 
 /**
- * Valid milestone types from the .NET API
- */
-export const VALID_MILESTONE_TYPES = [
-  'GnGDataReceived',
-  'MDTConducted',
-  'DWPSentDFS',
-  'DWPReceivedDFS',
-  'DWPSentCementing',
-  'DWPReceivedCementing',
-  'DesignInitiated',
-  'ApprovalInitiated',
-  'Level1Approval',
-  'Level2Approval',
-  'Level3Approval'
-] as const;
-
-export type MilestoneType = typeof VALID_MILESTONE_TYPES[number];
-
-/**
- * Milestone event data structure
+ * Milestone event data structure (from .NET API)
  */
 export interface MilestoneEventData {
-  designId: number;
-  milestoneType: string;
-  workCentre?: string | null;
-  userId: number;
-  recordedAt: string;
+  Asset: string;
+  Well: string;
+  Wellbore: string;
+  User: string;
+  CurrentMilestone: string;
+  ApprovalLevel: string;
+  Status: string;
+  Days: number;
+  PercentCompleted: number;
 }
 
 /**
- * Complete milestone event structure
+ * Complete milestone event structure (from .NET API)
  */
 export interface MilestoneEvent {
-  eventId: string;
-  eventType: string;
-  timestamp: string;
-  data: MilestoneEventData;
+  EventId: string;
+  EventType: string;
+  Timestamp: string;
+  Data: MilestoneEventData;
 }
 
 /**
  * Joi schema for milestone event validation
  */
 export const milestoneEventSchema = Joi.object<MilestoneEvent>({
-  eventId: Joi.string()
+  EventId: Joi.string()
     .guid({ version: 'uuidv4' })
     .required()
     .description('Unique event identifier'),
 
-  eventType: Joi.string()
-    .valid('MilestoneUpdated')
+  EventType: Joi.string()
+    .valid('MilestoneCreated')
     .required()
     .description('Type of event'),
 
-  timestamp: Joi.string()
+  Timestamp: Joi.string()
     .isoDate()
     .required()
     .description('ISO 8601 timestamp when event occurred'),
 
-  data: Joi.object({
-    designId: Joi.number()
-      .integer()
-      .positive()
-      .required()
-      .description('Design ID'),
-
-    milestoneType: Joi.string()
-      .valid(...VALID_MILESTONE_TYPES)
-      .required()
-      .description('Type of milestone'),
-
-    workCentre: Joi.string()
+  Data: Joi.object({
+    Asset: Joi.string()
       .max(200)
-      .allow(null, '')
-      .description('Work centre location'),
+      .required()
+      .description('Asset name'),
 
-    userId: Joi.number()
+    Well: Joi.string()
+      .max(200)
+      .required()
+      .description('Well name'),
+
+    Wellbore: Joi.string()
+      .max(200)
+      .required()
+      .description('Wellbore name'),
+
+    User: Joi.string()
+      .email()
+      .max(200)
+      .required()
+      .description('User email'),
+
+    CurrentMilestone: Joi.string()
+      .max(500)
+      .required()
+      .description('Current milestone'),
+
+    ApprovalLevel: Joi.string()
+      .max(100)
+      .required()
+      .description('Approval level'),
+
+    Status: Joi.string()
+      .max(100)
+      .required()
+      .description('Status'),
+
+    Days: Joi.number()
       .integer()
-      .positive()
+      .min(0)
       .required()
-      .description('User ID who recorded the milestone'),
+      .description('Days'),
 
-    recordedAt: Joi.string()
-      .isoDate()
+    PercentCompleted: Joi.number()
+      .min(0)
+      .max(100)
       .required()
-      .description('ISO 8601 timestamp when milestone was recorded')
+      .description('Percent completed')
   }).required()
-}).required();
+});
 
 /**
- * Validation result
+ * Validate a milestone event
  */
-export interface ValidationResult {
-  error?: Joi.ValidationError;
-  value?: MilestoneEvent;
+export function validateMilestoneEvent(event: unknown): Joi.ValidationResult<MilestoneEvent> {
+  return milestoneEventSchema.validate(event, { abortEarly: false });
 }
 
 /**
- * Validate a milestone event against the schema
- * @param event - The event to validate
- * @returns Validation result
+ * Check if an error is a critical validation error that should not be retried
  */
-export function validateMilestoneEvent(event: unknown): ValidationResult {
-  return milestoneEventSchema.validate(event, {
-    abortEarly: false, // Return all errors, not just the first one
-    stripUnknown: true // Remove unknown properties
-  });
-}
-
-/**
- * Check if validation error is critical (structural issues)
- * vs non-critical (could retry)
- * @param error - Validation error
- * @returns True if error is critical
- */
-export function isCriticalValidationError(error?: Joi.ValidationError): boolean {
-  if (!error || !error.details) {
-    return false;
-  }
-
-  // Critical errors that should not be retried
-  const criticalTypes = ['object.base', 'any.required', 'string.guid'];
-  
+export function isCriticalValidationError(error: Joi.ValidationError): boolean {
   return error.details.some(detail => 
-    criticalTypes.includes(detail.type)
+    detail.type === 'any.required' ||
+    detail.type === 'string.guid' ||
+    detail.type === 'string.email'
   );
 }
-
-export default {
-  milestoneEventSchema,
-  validateMilestoneEvent,
-  isCriticalValidationError,
-  VALID_MILESTONE_TYPES
-};
