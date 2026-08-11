@@ -1406,9 +1406,6 @@ Found a security issue? Please email security concerns or create a private secur
 
 <div align="center">
 
-## ⭐ Star this repository if you find it helpful!
-
-**Made with ❤️ for ONGC**
 
 **[Report Bug](https://github.com/athulkrizz/ongc_.net_app/issues)** • 
 **[Request Feature](https://github.com/athulkrizz/ongc_.net_app/issues)** • 
