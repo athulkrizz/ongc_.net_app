@@ -51,7 +51,7 @@ class DatabaseService {
         dbId: result.rows[0].id
       });
       return result.rows[0];
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to insert milestone event', {
         error: error.message,
         eventId: event.EventId,
@@ -63,10 +63,8 @@ class DatabaseService {
 
   /**
    * Check if an event already exists (for idempotency)
-   * @param {string} eventId - The event ID to check
-   * @returns {Promise<boolean>} True if event exists
    */
-  async eventExists(eventId) {
+  async eventExists(eventId: string): Promise<boolean> {
     const query = 'SELECT COUNT(*) as count FROM milestones WHERE event_id = $1';
 
     try {
@@ -78,7 +76,7 @@ class DatabaseService {
       }
 
       return exists;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to check event existence', {
         error: error.message,
         eventId
@@ -89,13 +87,13 @@ class DatabaseService {
 
   /**
    * Log a processing error to the database
-   * @param {string} eventId - Event ID (if available)
-   * @param {Error} error - The error object
-   * @param {Object} rawEvent - The raw event data
-   * @param {number} retryCount - Number of retries attempted
-   * @returns {Promise<Object>} Inserted error record
    */
-  async logProcessingError(eventId, error, rawEvent, retryCount = 0) {
+  async logProcessingError(
+    eventId: string | null,
+    error: Error,
+    rawEvent: any,
+    retryCount: number = 0
+  ): Promise<any> {
     const query = `
       INSERT INTO processing_errors (
         event_id,
@@ -123,7 +121,7 @@ class DatabaseService {
         retryCount
       });
       return result.rows[0];
-    } catch (dbError) {
+    } catch (dbError: any) {
       // Even logging the error failed - this is critical
       logger.error('CRITICAL: Failed to log processing error to database', {
         originalError: error.message,
@@ -137,9 +135,8 @@ class DatabaseService {
 
   /**
    * Get statistics about processed events
-   * @returns {Promise<Object>} Statistics object
    */
-  async getStatistics() {
+  async getStatistics(): Promise<any> {
     try {
       const [totalResult, typeResult, errorResult] = await Promise.all([
         // Total events
@@ -160,7 +157,7 @@ class DatabaseService {
         eventsByType: typeResult.rows,
         unresolvedErrors: parseInt(errorResult.rows[0].total, 10)
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get statistics', { error: error.message });
       throw error;
     }
@@ -168,9 +165,8 @@ class DatabaseService {
 
   /**
    * Get the last processed event
-   * @returns {Promise<Object|null>} Last event or null
    */
-  async getLastProcessedEvent() {
+  async getLastProcessedEvent(): Promise<any> {
     const query = `
       SELECT * FROM milestone_events 
       ORDER BY processed_at DESC 
@@ -180,7 +176,7 @@ class DatabaseService {
     try {
       const result = await database.query(query);
       return result.rows.length > 0 ? result.rows[0] : null;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get last processed event', { error: error.message });
       throw error;
     }
@@ -188,10 +184,8 @@ class DatabaseService {
 
   /**
    * Get recent events for testing/debugging
-   * @param {number} limit - Number of events to retrieve
-   * @returns {Promise<Array>} Array of events
    */
-  async getRecentEvents(limit = 10) {
+  async getRecentEvents(limit: number = 10): Promise<any[]> {
     const query = `
       SELECT * FROM milestone_events 
       ORDER BY created_at DESC 
@@ -201,7 +195,7 @@ class DatabaseService {
     try {
       const result = await database.query(query, [limit]);
       return result.rows;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to get recent events', { error: error.message });
       throw error;
     }
@@ -209,17 +203,15 @@ class DatabaseService {
 
   /**
    * Mark a processing error as resolved
-   * @param {number} errorId - The error ID
-   * @returns {Promise<boolean>} Success status
    */
-  async resolveError(errorId) {
+  async resolveError(errorId: number): Promise<boolean> {
     const query = 'UPDATE processing_errors SET resolved = true WHERE id = $1';
     
     try {
       await database.query(query, [errorId]);
       logger.info('Error marked as resolved', { errorId });
       return true;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to resolve error', { errorId, error: error.message });
       return false;
     }
